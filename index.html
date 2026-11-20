@@ -110,16 +110,17 @@
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({name, email, domain, notes})
       }).catch(()=>{});
+      const fd = new FormData();
+      fd.append('_subject', `[IEaaS Installation Request] ${domain} - ${name}`);
+      fd.append('_captcha', 'false');
+      fd.append('name', name);
+      fd.append('email', email);
+      fd.append('domain_or_network', domain);
+      fd.append('notes', notes || 'None provided');
       const fs = await fetch('https://formsubmit.co', {
         method: 'POST',
-        headers: {'Content-Type': 'application/json', 'Accept': 'application/json'},
-        body: JSON.stringify({
-          _subject: `[IEaaS™ Installation Request] ${domain} — ${name}`,
-          name: name,
-          email: email,
-          domain_or_network: domain,
-          notes: notes || 'None provided'
-        })
+        headers: {'Accept': 'application/json'},
+        body: fd
       });
       msg.textContent = fs.ok ? "✅ Request sent & copy dispatched to ibukadel92@gmail.com!" : "⚠️ Logged on server — click 'Email directly' to send via your mail app.";
     }
