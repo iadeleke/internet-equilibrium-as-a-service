@@ -42,16 +42,21 @@
     <div class="card">
       <h2 style="margin:0 0 6px;font-size:20px;">Install Internet Equilibrium™ on Your Domain or Network</h2>
       <p style="margin:0 0 14px;color:#94a3b8;font-size:14px;">Submit your domain or network details below to begin installation, or contact <strong>ibukadel92@gmail.com</strong> directly.</p>
-      <div class="grid">
-        <input id="c-name" placeholder="Your Name / Organization" />
-        <input id="c-email" type="email" placeholder="Work Email" />
-        <input id="c-domain" placeholder="Target Domain or Network (https://...)" />
-      </div>
-      <textarea id="c-notes" rows="2" placeholder="Network scale or integration goals (optional)" style="margin-bottom:12px;"></textarea>
-      <div style="display:flex;flex-wrap:wrap;gap:14px;align-items:center;">
-        <button class="btn" onclick="submitInstall()">Request Domain / Network Installation</button>
-        <a id="direct-mail" href="mailto:ibukadel92@://gmail.com" onclick="prepMailto()" style="color:#38bdf8;font-size:14px;font-weight:700;text-decoration:none;">Email directly</a>
-      </div>
+      <iframe name="fs-frame" style="display:none;"></iframe>
+      <form id="install-form" action="https://formsubmit.co" method="POST" target="fs-frame" onsubmit="return submitInstall()">
+        <input type="hidden" name="_subject" id="fs-subj" value="[IEaaS Installation Request]" />
+        <input type="hidden" name="_captcha" value="false" />
+        <div class="grid">
+          <input id="c-name" name="name" required placeholder="Your Name / Organization" />
+          <input id="c-email" name="email" type="email" required placeholder="Work Email" />
+          <input id="c-domain" name="domain_or_network" required placeholder="Target Domain or Network (https://...)" />
+        </div>
+        <textarea id="c-notes" name="notes" rows="2" placeholder="Network scale or integration goals (optional)" style="margin-bottom:12px;"></textarea>
+        <div style="display:flex;flex-wrap:wrap;gap:14px;align-items:center;">
+          <button type="submit" class="btn">Request Domain / Network Installation</button>
+          <a id="direct-mail" href="mailto:ibukadel92@://gmail.com" onclick="prepMailto()" style="color:#38bdf8;font-size:14px;font-weight:700;text-decoration:none;">Email directly</a>
+        </div>
+      </form>
       <div id="c-msg" style="margin-top:12px;font-size:13px;color:#38bdf8;"></div>
     </div>
 
@@ -98,31 +103,21 @@
       document.getElementById('direct-mail').href = `mailto:ibukadel92@://gmail.com{subj}&body=${body}`;
     }
 
-    async function submitInstall() {
+    function submitInstall() {
       const name = document.getElementById('c-name').value.trim();
       const email = document.getElementById('c-email').value.trim();
       const domain = document.getElementById('c-domain').value.trim();
       const notes = document.getElementById('c-notes').value.trim();
       const msg = document.getElementById('c-msg');
-      if (!name || !email || !domain) { msg.textContent = "⚠️ Please enter your name, email, and domain/network."; return; }
-      await fetch('/api/ieaas/inquiry', {
+      if (!name || !email || !domain) { msg.textContent = "⚠️ Please enter your name, email, and domain/network."; return false; }
+      document.getElementById('fs-subj').value = `[IEaaS Installation Request] ${domain} - ${name}`;
+      fetch('/api/ieaas/inquiry', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({name, email, domain, notes})
       }).catch(()=>{});
-      const fd = new FormData();
-      fd.append('_subject', `[IEaaS Installation Request] ${domain} - ${name}`);
-      fd.append('_captcha', 'false');
-      fd.append('name', name);
-      fd.append('email', email);
-      fd.append('domain_or_network', domain);
-      fd.append('notes', notes || 'None provided');
-      const fs = await fetch('https://formsubmit.co', {
-        method: 'POST',
-        headers: {'Accept': 'application/json'},
-        body: fd
-      });
-      msg.textContent = fs.ok ? "✅ Request sent & copy dispatched to ibukadel92@gmail.com!" : "⚠️ Logged on server — click 'Email directly' to send via your mail app.";
+      msg.textContent = "✅ Request submitted & dispatched to ibukadel92@gmail.com!";
+      return true;
     }
   </script>
 </body>
