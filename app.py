@@ -1,3 +1,4 @@
+from whitepaper import render_whitepaper
 import asyncio, os, smtplib, time
 from contextlib import asynccontextmanager
 from email.message import EmailMessage
@@ -86,3 +87,8 @@ async def list_inquiries():
 
 @app.get("/", response_class=HTMLResponse)
 async def home(): return open("index.html").read()
+
+@app.get("/whitepaper", response_class=HTMLResponse)
+@app.get("/docs", response_class=HTMLResponse)
+async def whitepaper_page():
+    return render_whitepaper()
