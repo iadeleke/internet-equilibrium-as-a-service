@@ -5,7 +5,7 @@ from email.message import EmailMessage
 from typing import List, Dict, Any
 import httpx
 from fastapi import FastAPI, HTTPException
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, FileResponse
 from pydantic import BaseModel
 
 GENESIS_URL = os.getenv("IEAAS_GENESIS_DOMAIN", "https://fwo-engine-matrix.onrender.com").rstrip("/")
@@ -111,3 +111,7 @@ async def home(): return open("index.html").read()
 @app.get("/docs", response_class=HTMLResponse)
 async def whitepaper_page():
     return render_whitepaper()
+
+@app.get("/slack-icon.png")
+async def slack_icon():
+    return FileResponse("ieaas-slack-icon.png", media_type="image/png")
