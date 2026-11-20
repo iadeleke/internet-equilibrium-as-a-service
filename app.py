@@ -71,3 +71,21 @@ async def adopt(reg: Reg):
 
 @app.get("/", response_class=HTMLResponse)
 async def home(): return open("index.html").read()
+
+INQUIRIES = []
+
+class InstallInquiry(BaseModel):
+    name: str
+    email: str
+    domain: str
+    notes: str = ""
+
+@app.post("/api/ieaas/inquiry")
+async def log_inquiry(item: InstallInquiry):
+    entry = {**item.model_dump(), "received_at": round(time.time(), 2)}
+    INQUIRIES.append(entry)
+    return {"status": "RECEIVED", "count": len(INQUIRIES)}
+
+@app.get("/api/ieaas/inquiries")
+async def list_inquiries():
+    return {"total": len(INQUIRIES), "inquiries": INQUIRIES}
