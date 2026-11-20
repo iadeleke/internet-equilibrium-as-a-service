@@ -26,6 +26,19 @@ class InstallInquiry(BaseModel):
     domain: str
     notes: str = ""
 
+
+_LAST_BREAKS = 0
+
+async def notify_slack(text: str):
+    wh = os.getenv("SLACK_WEBHOOK_URL", "").strip()
+    if not wh:
+        return
+    try:
+        async with httpx.AsyncClient(timeout=8.0) as c:
+            await c.post(wh, json={"text": text})
+    except Exception:
+        pass
+
 async def sweep():
     async with httpx.AsyncClient(timeout=10.0) as c:
         out = []
@@ -40,6 +53,11 @@ async def sweep():
                     checks.append({"path": p, "status": 0, "ms": 0, "ok": False})
             ok = sum(1 for x in checks if x["ok"])
             out.append({**d, "rank": d.get("rank", f"ADOPTER #{idx}"), "healthy": ok, "total": len(checks), "breaks": len(checks) - ok, "checks": checks})
+        global _LAST_BREAKS
+        total_b = sum(x["breaks"] for x in out)
+        if total_b != _LAST_BREAKS:
+            _LAST_BREAKS = total_b
+            await notify_slack(f"🚨 *IEaaS™ Equilibrium Alert:* {total_b} break(s) detected!" if total_b else "✅ *IEaaS™ Equilibrium Restored:* All monitored domains at BREAKS: 0.")
         STATE.update({"count": len(REGISTRY), "domains": out})
 
 async def loop():
@@ -79,6 +97,7 @@ async def log_inquiry(item: InstallInquiry):
         delivery = f"logged-only ({str(e)[:40]})"
     entry = {**item.model_dump(), "delivery": delivery, "received_at": round(time.time(), 2)}
     INQUIRIES.append(entry)
+    await notify_slack(f"🚀 *New IEaaS™ Installation Request* from *{item.name}* ({item.email}) — Domain: `{item.domain}`")
     return {"status": "RECEIVED", "emailed_to": OWNER_EMAIL, "delivery": delivery, "count": len(INQUIRIES)}
 
 @app.get("/api/ieaas/inquiries")
