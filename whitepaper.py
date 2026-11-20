@@ -27,7 +27,21 @@ def render_whitepaper() -> str:
   <div class="wrap">
     <div class="nav">
       <a href="{s}" style="color:#38bdf8;font-weight:700;text-decoration:none;">← Back to IEaaS™ Home</a>
-      <span class="pill">PROTOCOL SPEC v4.1 • BREAKS: 0</span>
+      <svg width="340" height="52" viewBox="0 0 340 52" fill="none" xmlns="http://w3.org" style="display:block;">
+  <defs>
+    <linearGradient id="ieWordGrad" x1="0" y1="0" x2="52" y2="52" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#38bdf8"/>
+      <stop offset="100%" stop-color="#6366f1"/>
+    </linearGradient>
+  </defs>
+  <rect x="2" y="2" width="48" height="48" rx="12" fill="#0b1222" stroke="url(#ieWordGrad)" stroke-width="2"/>
+  <path d="M13 26C13 20.5 17.5 16.5 22.8 19.5L29.2 23.2C34.5 26.2 39 22.2 39 26C39 31.5 34.5 35.5 29.2 32.5L22.8 28.8C17.5 25.8 13 31.5 13 26Z" stroke="url(#ieWordGrad)" stroke-width="3.2" stroke-linecap="round"/>
+  <circle cx="15" cy="26" r="2.4" fill="#38bdf8"/>
+  <circle cx="37" cy="26" r="2.4" fill="#818cf8"/>
+  <line x1="26" y1="10" x2="26" y2="42" stroke="#38bdf8" stroke-width="1.3" stroke-dasharray="2.5 2.5"/>
+  <text x="62" y="28" fill="#f8fafc" font-family="ui-sans-serif, system-ui, -apple-system, sans-serif" font-weight="900" font-size="22" letter-spacing="0.02em">IEaaS™</text>
+  <text x="62" y="43" fill="#38bdf8" font-family="ui-sans-serif, system-ui, -apple-system, sans-serif" font-weight="800" font-size="9.5" letter-spacing="0.11em">INTERNET EQUILIBRIUM AS A SERVICE™</text>
+</svg>
     </div>
 
     <h1>Internet Equilibrium as a Service™ (IEaaS™)<br><span style="font-size:20px;color:#94a3b8;font-weight:600;">Technical Whitepaper &amp; Workload Architecture</span></h1>
