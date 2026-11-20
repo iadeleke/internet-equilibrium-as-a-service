@@ -67,33 +67,7 @@ async def run_sweep():
     return STATE
 
 async def dispatch_email_copy(item: InstallInquiry) -> str:
-    smtp_user = os.getenv("SMTP_USER", "").strip()
-    smtp_pass = os.getenv("SMTP_PASS", "").strip()
-    if smtp_user and smtp_pass:
-        msg = EmailMessage()
-        msg["Subject"] = f"[IEaaS™ Installation Request] {item.domain} — {item.name}"
-        msg["From"] = smtp_user
-        msg["To"] = OWNER_EMAIL
-        msg["Reply-To"] = item.email
-        msg.set_content(f"New Internet Equilibrium™ Installation Request\n\nName: {item.name}\nEmail: {item.email}\nDomain/Network: {item.domain}\nNotes: {item.notes}\n")
-        with smtplib.SMTP_SSL("://gmail.com", 465, timeout=10) as s:
-            s.login(smtp_user, smtp_pass)
-            s.send_message(msg)
-        return "smtp-direct"
-
-    async with httpx.AsyncClient(timeout=10.0) as c:
-        r = await c.post(
-            f"https://formsubmit.co{OWNER_EMAIL}",
-            headers={"Accept": "application/json", "Origin": "https://fwo-engine-matrix.onrender.com"},
-            json={
-                "_subject": f"[IEaaS™ Installation Request] {item.domain} — {item.name}",
-                "name": item.name,
-                "email": item.email,
-                "domain_or_network": item.domain,
-                "notes": item.notes or "None provided",
-            },
-        )
-        return "formsubmit-relay" if r.status_code == 200 else f"queued-http-{r.status_code}"
+    return "browser-relay"
 
 @app.post("/api/ieaas/inquiry")
 async def log_inquiry(item: InstallInquiry):
