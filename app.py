@@ -7,7 +7,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
 
-GENESIS_URL = os.getenv("IEAAS_GENESIS_DOMAIN", "https://onrender.com").rstrip("/")
+GENESIS_URL = os.getenv("IEAAS_GENESIS_DOMAIN", "https://fwo-engine-matrix.onrender.com").rstrip("/")
 OWNER_EMAIL = "ibukadel92@gmail.com"
 
 REGISTRY: List[Dict[str, Any]] = [{
@@ -84,7 +84,7 @@ async def dispatch_email_copy(item: InstallInquiry) -> str:
     async with httpx.AsyncClient(timeout=10.0) as c:
         r = await c.post(
             f"https://formsubmit.co{OWNER_EMAIL}",
-            headers={"Accept": "application/json", "Origin": "https://onrender.com"},
+            headers={"Accept": "application/json", "Origin": "https://fwo-engine-matrix.onrender.com"},
             json={
                 "_subject": f"[IEaaS™ Installation Request] {item.domain} — {item.name}",
                 "name": item.name,
