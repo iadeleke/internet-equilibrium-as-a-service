@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Internet Equilibrium as a Service™ (IEaaS™)</title>
+<style>
+  body{margin:0;background:#040711;color:#f8fafc;font-family:sans-serif;padding:24px}
+  .w{max-width:1080px;margin:0 auto}.card{background:#0b1222;border:1px solid #1e293b;border-radius:12px;padding:18px;margin-bottom:16px}
+  .btn{background:#0284c7;color:#fff;border:none;padding:9px 16px;border-radius:7px;font-weight:700;cursor:pointer}
+  table{width:100%;border-collapse:collapse;margin-top:10px}th,td{padding:8px;border-bottom:1px solid #1e293b;text-align:left;font-size:13px}
+  input{background:#050914;color:#fff;border:1px solid #334155;padding:8px;border-radius:6px;margin-right:6px}
+</style></head>
+<body><div class="w">
+  <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #1e293b;padding-bottom:14px">
+    <strong style="color:#38bdf8;font-size:18px">INTERNET EQUILIBRIUM AS A SERVICE™ (IEaaS™)</strong>
+    <button class="btn" onclick="sweep()">⚡ Run Global Sweep</button>
+  </div>
+  <h1>Zero-Break Architecture for the Modern Internet.</h1>
+  <p style="color:#94a3b8">Deterministic state, sub-100ms sync/async equilibrium, and self-healing telemetry at <b>BREAKS: 0</b>.</p>
+  <div id="list"></div>
+  <div class="card"><h3>🚀 Adopt Internet Equilibrium as a Service™</h3>
+    <input id="n" placeholder="Platform Name"><input id="u" placeholder="https://fwo-engine-matrix.onrender.com"><input id="r" placeholder="Region">
+    <button class="btn" onclick="adopt()">Verify & Join</button><div id="m" style="margin-top:8px;color:#38bdf8"></div>
+  </div>
+</div>
+<script>
+async function load(){const d=await(await fetch('/api/ieaas/registry')).json();document.getElementById('list').innerHTML=d.domains.map(x=>`<div class="card" style="border-color:#2563eb"><small style="color:#38bdf8;font-weight:700">${x.rank} • ${x.region}</small><h2>${x.name} (${x.healthy}/${x.total} OK • BREAKS: ${x.breaks})</h2><div style="color:#94a3b8;font-size:13px">${x.url} • ${x.stack}</div><table>${x.checks.map(c=>`<tr><td><code>${c.path}</code></td><td>HTTP ${c.status}</td><td>${c.ms}ms</td><td style="color:${c.ok?'#22c55e':'#ef4444'}">${c.ok?'✅ EQUILIBRIUM':'❌ BREAK'}</td></tr>`).join('')}</table></div>`).join('');}
+async function sweep(){await fetch('/api/ieaas/sweep',{method:'POST'});load();}
+async function adopt(){const r=await fetch('/api/ieaas/adopt',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:document.getElementById('n').value,url:document.getElementById('u').value,region:document.getElementById('r').value||'Global'})});const j=await r.json();document.getElementById('m').textContent=r.ok?'✅ Added to Registry!':'⚠️ '+(j.detail||'Error');if(r.ok)load();}
+load();setInterval(load,15000);
+</script></body></html>
