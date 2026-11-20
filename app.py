@@ -1,23 +1,29 @@
-import asyncio, os, time
+import asyncio, os, smtplib, time
 from contextlib import asynccontextmanager
+from email.message import EmailMessage
+from typing import List, Dict, Any
 import httpx
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
 
-REGISTRY = [{
+GENESIS_URL = os.getenv("IEAAS_GENESIS_DOMAIN", "https://onrender.com").rstrip("/")
+OWNER_EMAIL = "ibukadel92@gmail.com"
+
+REGISTRY: List[Dict[str, Any]] = [{
     "id": "genesis-01", "rank": "#1 GENESIS ADOPTER",
     "name": "Finance Wallet Onboarding™ (FWO™)", "region": "Global Edge • Seattle",
-    "url": os.getenv("IEAAS_GENESIS_DOMAIN", "https://fwo-engine-matrix.onrender.com"),
-    "stack": "IEaaS v4.1 • FAPI 2.0 • mTLS 1.3 • PostgreSQL",
+    "url": GENESIS_URL, "stack": "IEaaS v4.1 • FAPI 2.0 • mTLS 1.3 • PostgreSQL",
     "paths": ["/", "/health", "/fwo/v1/health", "/api/v1/production/readiness", "/fwo/v1/payments/queue", "/fwo/v1/webhooks/dlq", "/fwo/v1/infrastructure/cabinets", "/telemetry/reconcile/3h"]
 }]
-STATE = {"platform": "Internet Equilibrium as a Service™ (IEaaS™)", "count": 1, "domains": []}
+STATE: Dict[str, Any] = {"platform": "Internet Equilibrium as a Service™ (IEaaS™)", "count": 1, "domains": []}
+INQUIRIES: List[Dict[str, Any]] = []
 
-class Reg(BaseModel):
+class InstallInquiry(BaseModel):
     name: str
-    url: str
-    region: str = "Global Edge"
+    email: str
+    domain: str
+    notes: str = ""
 
 async def sweep():
     async with httpx.AsyncClient(timeout=10.0) as c:
@@ -60,32 +66,49 @@ async def run_sweep():
     await sweep()
     return STATE
 
-@app.post("/api/ieaas/adopt")
-async def adopt(reg: Reg):
-    u = reg.url.strip().rstrip("/")
-    if not u.startswith(("https://", "http://")): raise HTTPException(422, "Invalid URL")
-    n = len(REGISTRY) + 1
-    REGISTRY.append({"id": f"adopter-{n:02d}", "rank": f"#{n} GLOBAL ADOPTER", "name": reg.name, "region": reg.region, "url": u, "stack": "IEaaS Standard", "paths": ["/", "/health"]})
-    await sweep()
-    return {"status": "ADOPTED", "total": len(REGISTRY)}
+async def dispatch_email_copy(item: InstallInquiry) -> str:
+    smtp_user = os.getenv("SMTP_USER", "").strip()
+    smtp_pass = os.getenv("SMTP_PASS", "").strip()
+    if smtp_user and smtp_pass:
+        msg = EmailMessage()
+        msg["Subject"] = f"[IEaaS™ Installation Request] {item.domain} — {item.name}"
+        msg["From"] = smtp_user
+        msg["To"] = OWNER_EMAIL
+        msg["Reply-To"] = item.email
+        msg.set_content(f"New Internet Equilibrium™ Installation Request\n\nName: {item.name}\nEmail: {item.email}\nDomain/Network: {item.domain}\nNotes: {item.notes}\n")
+        with smtplib.SMTP_SSL("://gmail.com", 465, timeout=10) as s:
+            s.login(smtp_user, smtp_pass)
+            s.send_message(msg)
+        return "smtp-direct"
 
-@app.get("/", response_class=HTMLResponse)
-async def home(): return open("index.html").read()
-
-INQUIRIES = []
-
-class InstallInquiry(BaseModel):
-    name: str
-    email: str
-    domain: str
-    notes: str = ""
+    async with httpx.AsyncClient(timeout=10.0) as c:
+        r = await c.post(
+            f"https://formsubmit.co{OWNER_EMAIL}",
+            headers={"Accept": "application/json", "Origin": "https://onrender.com"},
+            json={
+                "_subject": f"[IEaaS™ Installation Request] {item.domain} — {item.name}",
+                "name": item.name,
+                "email": item.email,
+                "domain_or_network": item.domain,
+                "notes": item.notes or "None provided",
+            },
+        )
+        return "formsubmit-relay" if r.status_code == 200 else f"queued-http-{r.status_code}"
 
 @app.post("/api/ieaas/inquiry")
 async def log_inquiry(item: InstallInquiry):
-    entry = {**item.model_dump(), "received_at": round(time.time(), 2)}
+    delivery = "queued"
+    try:
+        delivery = await dispatch_email_copy(item)
+    except Exception as e:
+        delivery = f"logged-only ({str(e)[:40]})"
+    entry = {**item.model_dump(), "delivery": delivery, "received_at": round(time.time(), 2)}
     INQUIRIES.append(entry)
-    return {"status": "RECEIVED", "count": len(INQUIRIES)}
+    return {"status": "RECEIVED", "emailed_to": OWNER_EMAIL, "delivery": delivery, "count": len(INQUIRIES)}
 
 @app.get("/api/ieaas/inquiries")
 async def list_inquiries():
     return {"total": len(INQUIRIES), "inquiries": INQUIRIES}
+
+@app.get("/", response_class=HTMLResponse)
+async def home(): return open("index.html").read()
